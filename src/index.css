@@ -3,9 +3,15 @@
   padding: 0 !important;
 } */
 
+@font-face {
+  font-family: "Poppins Medium";
+  src: url(./assets/fonts/Poppins-Medium.ttf) format("truetype");
+}
+
 body {
   background-color: black;
   color: white;
+  font-family: "Poppins Medium";
 }
 
 @tailwind base;

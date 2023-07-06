@@ -1,5 +1,5 @@
-export type key = `${string}-${string}-${string}-${string}-${string}`;
+export type id = `${string}-${string}-${string}-${string}-${string}`;
 export interface Note {
-  key: key;
+  id: id;
   content: string;
 }

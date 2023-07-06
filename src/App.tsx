@@ -4,6 +4,22 @@ import { IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import TextArea from "./components/TextArea";
 import { Note } from "./types/types";
+
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
+
 const App = () => {
   const savedNotes = localStorage.getItem("Notes");
   if (!savedNotes) localStorage.setItem("Notes", "[]");
@@ -12,12 +28,21 @@ const App = () => {
     JSON.parse(localStorage.getItem("Notes") || "[]")
   );
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const handleClick = () => {
-    setNotes([...notes, { key: crypto.randomUUID(), content: "" }]);
+    setNotes([...notes, { id: crypto.randomUUID(), content: "" }]);
   };
 
-  const onNoteChange = ({ key: keyUpdated, content }: Note) => {
-    const noteUpdatedIndex = notes.findIndex(({ key }) => key === keyUpdated);
+  const onNoteChange = ({ id: keyUpdated, content }: Note) => {
+    const noteUpdatedIndex = notes.findIndex(
+      ({ id: key }) => key === keyUpdated
+    );
     if (noteUpdatedIndex !== -1) {
       const updatedNotes = [...notes];
       updatedNotes[noteUpdatedIndex] = {
@@ -26,38 +51,61 @@ const App = () => {
       };
       localStorage.setItem("Notes", JSON.stringify(updatedNotes));
       setNotes(updatedNotes);
-      // console.log("nota actualizada");
     }
   };
 
   const deleteNote = (key: string) => {
-    const updatedNotes = notes.filter(({ key: noteKey }) => key !== noteKey);
+    const updatedNotes = notes.filter(({ id: noteKey }) => key !== noteKey);
     localStorage.setItem("Notes", JSON.stringify(updatedNotes));
     setNotes(updatedNotes);
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setNotes((notes) => {
+        // * indice inicial desde donde se movió
+        const oldIndex = notes.findIndex((note) => active.id === note.id);
+        // * indice al que fue colocado
+        const newIndex = notes.findIndex((note) => over?.id === note.id);
+        return arrayMove(notes, oldIndex, newIndex);
+      });
+    }
+  };
+
   return (
-    <div className="container mx-auto">
+    <div className="px-10 mt-5">
       <h1 className="text-[#e27878] text-center text-3xl">NOTES APP</h1>
-      {/* <button onClick={handleClick}>add</button> */}
       <IconPlus
         onClick={handleClick}
         size={50}
         color={"#78e29a"}
         stroke={4}
-        className="hover:cursor-pointer"
+        className="hover:cursor-pointer mb-2"
       />
 
-      <div className="flex flex-wrap gap-4 justify-center">
-        {notes.map(({ key, content }) => (
-          <TextArea
-            key={key}
-            id={key}
-            content={content}
-            onNoteChange={onNoteChange}
-            deleteNote={deleteNote}
-          ></TextArea>
-        ))}
+      <div className="grid md:grid-cols-3 grid-cols-1 md:gap-x-4 gap-y-4">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={notes}
+            // strategy={horizontalListSortingStrategy}
+          >
+            {notes.map(({ id: key, content }) => (
+              <TextArea
+                key={key}
+                id={key}
+                content={content}
+                onNoteChange={onNoteChange}
+                deleteNote={deleteNote}
+              ></TextArea>
+            ))}
+          </SortableContext>
+        </DndContext>
       </div>
     </div>
   );
