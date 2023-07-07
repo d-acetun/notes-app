@@ -69,7 +69,9 @@ const App = () => {
         const oldIndex = notes.findIndex((note) => active.id === note.id);
         // * indice al que fue colocado
         const newIndex = notes.findIndex((note) => over?.id === note.id);
-        return arrayMove(notes, oldIndex, newIndex);
+        const newOrder = arrayMove(notes, oldIndex, newIndex);
+        localStorage.setItem("Notes", JSON.stringify(newOrder));
+        return newOrder;
       });
     }
   };
