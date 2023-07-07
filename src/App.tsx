@@ -1,9 +1,10 @@
 // import reactLogo from "./assets/react.svg";
 // import viteLogo from "/vite.svg";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconFileExport } from "@tabler/icons-react";
 import { useState } from "react";
 import TextArea from "./components/TextArea";
 import { Note } from "./types/types";
+import { copyToClipboard } from "./utils/clipboard";
 
 import {
   DndContext,
@@ -19,6 +20,7 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import FileInput from "./components/FileInput";
 
 const App = () => {
   const savedNotes = localStorage.getItem("Notes");
@@ -27,6 +29,11 @@ const App = () => {
   const [notes, setNotes] = useState<Note[]>(
     JSON.parse(localStorage.getItem("Notes") || "[]")
   );
+
+  const overWriteNotes = (notes: Note[]) => {
+    setNotes(notes);
+    localStorage.setItem("Notes", JSON.stringify(notes));
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -79,13 +86,27 @@ const App = () => {
   return (
     <div className="px-10 mt-5">
       <h1 className="text-[#e27878] text-center text-3xl">NOTES APP</h1>
-      <IconPlus
-        onClick={handleClick}
-        size={50}
-        color={"#78e29a"}
-        stroke={4}
-        className="hover:cursor-pointer mb-2"
-      />
+      <FileInput saveNotes={overWriteNotes}></FileInput>
+      <div className="flex mt-2">
+        <div title="add">
+          <IconPlus
+            onClick={handleClick}
+            size={50}
+            color={"#78e29a"}
+            stroke={4}
+            className="hover:cursor-pointer mb-2"
+          />
+        </div>
+        <div title="export">
+          <IconFileExport
+            onClick={() => copyToClipboard(JSON.stringify(notes))}
+            size={50}
+            color={"#7bcfea"}
+            stroke={4}
+            className="hover:cursor-pointer mb-2"
+          />
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-3 grid-cols-1 md:gap-x-4 gap-y-4">
         <DndContext
